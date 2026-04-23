@@ -428,6 +428,10 @@
         const dataAlt = await resAlt.json();
         const w = await resW.json();
         const alt = dataAlt.results[0].elevation;
+		const descMeteo = w.weather[0].description;
+        const iconCode = w.weather[0].icon;
+        const nuages = w.clouds.all;
+        const iconUrl = `https://openweathermap.org/img/wn/${iconCode}.png`;
 
         // Mise à jour de la popup avec les résultats
         const updatedContent = `
@@ -436,9 +440,17 @@
                     <small style="color:gray; font-size:10px; display:block;">ALTITUDE</small>
                     <b style="color:#2c3e50;"><i class="fa-solid fa-mountain" style="color:#27ae60;"></i> ${Math.round(alt)} m</b>
                 </div>
-                <div style="flex:1; background:#fff7f2; padding:8px; border-radius:5px; border-left:4px solid #3498db; text-align:left;">
-                    <small style="color:gray; font-size:10px; display:block;">MÉTÉO LIVE</small>
-                    <b style="color:#2c3e50;">${Math.round(w.main.temp)}°C</b> <span style="font-size:10px;">| <i class="fa-solid fa-wind"></i> ${Math.round(w.wind.speed * 3.6)} km/h</span>
+                
+                <div style="flex:2; background:#fff7f2; padding:8px; border-radius:5px; border-left:4px solid #3498db; text-align:left;">
+                    <small style="color:gray; font-size:10px; display:block;">MÉTÉO LIVE : ${descMeteo.toUpperCase()}</small>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <img src="${iconUrl}" style="width:30px; margin:-5px 0;">
+                        <b style="color:#2c3e50; font-size:14px;">${Math.round(w.main.temp)}°C</b>
+                        <span style="font-size:10px; color:#555;">
+                             | <i class="fa-solid fa-cloud"></i> ${nuages}%
+                             | <i class="fa-solid fa-wind"></i> ${Math.round(w.wind.speed * 3.6)} km/h
+                        </span>
+                    </div>
                 </div>
             </div>`;
 
