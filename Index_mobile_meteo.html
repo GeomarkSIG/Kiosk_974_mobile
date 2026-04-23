@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Kiosque 974 - Version Finale Expert</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+@keyframes wave-pulse {
+    0% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.05); }
+    100% { opacity: 0.3; transform: scale(1); }
+}
+
+.wave-pattern {
+    pointer-events: none; /* Pour que les vagues ne bloquent pas le clic sur la carte */
+    opacity: 0.4;
+    filter: brightness(0) invert(1); /* Rend le motif blanc si l'image est noire */
+    animation: wave-pulse 4s infinite ease-in-out;
+}
+#map {
+    background-color: #add8e6; /* Un bleu plus océanique */
+    box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.5); /* Effet de brillance intérieure */
+}
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+
+        /* --- BANDEAU IMAGE ET ONGLETS --- */
+        #header-band { 
+            height: 100px;
+            position: relative; 
+            overflow: hidden;
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: flex-end;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #header-band img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; 
+            object-position: center 60%;
+            z-index: -1; 
+            filter: brightness(0.7);
+        }
+
+        #header-band h1 { 
+            color: white; 
+            font-size: 24px; 
+            text-shadow: 3px 3px 10px rgba(0,0,0,0.8); 
+            margin: 0 0 15px 0;
+            letter-spacing: 5px;
+        }
+
+        .main-nav { width: 100%; }
+        .main-nav ul {
+            list-style: none;
+            padding: 0; margin: 0;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .main-nav li a {
+            display: block;
+            text-decoration: none;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 25px;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+            cursor: pointer;
+        }
+
+        .main-nav li a i { font-size: 18px; }
+
+        .main-nav li a:hover, .main-nav li a.active {
+            background: #e67e22;
+            border-bottom: 4px solid #fff;
+        }
+
+        /* CARTE */
+        #map { height: calc(100vh - 180px); width: 100%; background: #eee; }
+
+        /* INTRO */
+        #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
+        .intro-card { background: white; padding: 40px; border-radius: 20px; max-width: 450px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .btn-start { background: #e67e22; color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+
+        /* POPUP */
+        .leaflet-popup-content-wrapper { padding: 0; border-radius: 15px; overflow: hidden; background: #fdfdfd; animation: slowSlideUp 0.8s ease-out; }
+        @keyframes slowSlideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .leaflet-popup-content { margin: 0 !important; width: 260px !important; }
+        .popup-header { background: #e67e22; color: white; padding: 10px 36px 10px 10px; font-weight: bold; font-size: 13px; position: relative; }
+        
+        .leaflet-container .leaflet-popup-close-button {
+            right: 8px !important; top: 12px !important; background: #ff4757 !important; color: white !important;
+            border-radius: 50% !important; width: 20px !important; height: 20px !important;
+            line-height: 20px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;
+        }
+
+        .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; background: #fff; }
+        .info-card { background: #f8f9fa; padding: 5px; border-radius: 5px; border-left: 3px solid #e67e22; }
+        .info-card.full { grid-column: span 2; }
+        .card-label { font-size: 8px; color: #95a5a6; text-transform: uppercase; font-weight: bold; display: block; }
+        .card-value { font-size: 10px; color: #2c3e50; font-weight: 600; display: flex; align-items: center; margin-top: 2px; }
+        .card-icon { width: 12px; margin-right: 6px; }
+        .status-badge { background: #27ae60; color: white; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+
+        /* FLÈCHE NORD */
+        .north-arrow { padding: 8px; background: rgba(255,255,255,0.9); border-radius: 4px; border: 1px solid #ccc; text-align: center; }
+        .north-arrow img { width: 20px; display: block; margin: 0 auto; }
+
+        /* DRAPEAU RÉUNION */
+        .reunion-flag-control {
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #ccc;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            overflow: hidden;
+            width: 54px;
+            height: 54px;
+        }
+        .reunion-flag-control img {
+            width: 54px;
+            height: 54px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* COMPTEUR KIOSQUES */
+        .kiosk-counter {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+            padding: 10px 18px;
+            text-align: center;
+            border-top: 4px solid #e67e22;
+            min-width: 140px;
+            pointer-events: none;
+            margin-top: 8px;
+        }
+        .kiosk-counter .counter-label {
+            font-size: 10px;
+            color: #95a5a6;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .kiosk-counter .counter-value {
+            font-size: 34px;
+            font-weight: 900;
+            color: #e67e22;
+            line-height: 1.1;
+        }
+        .kiosk-counter .counter-sub {
+            font-size: 10px;
+            color: #7f8c8d;
+        }
+
+        /* MODAL CONTACT */
+        #contact-modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        #contact-modal.open { display: flex; }
+        .contact-card {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+            animation: slowSlideUp 0.4s ease-out;
+        }
+        .contact-card-header {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+            padding: 28px 30px 20px;
+            position: relative;
+        }
+        .contact-card-header h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: 1px; }
+        .contact-card-header .company { font-size: 13px; opacity: 0.9; font-weight: 600; }
+        .contact-card-close {
+            position: absolute; top: 12px; right: 14px;
+            background: rgba(255,255,255,0.2);
+            border: none; color: white;
+            width: 28px; height: 28px;
+            border-radius: 50%; cursor: pointer;
+            font-size: 16px; line-height: 28px; text-align: center;
+        }
+        .contact-card-body { padding: 22px 28px; }
+        .contact-row {
+            display: flex; align-items: center;
+            gap: 12px; margin-bottom: 14px;
+            font-size: 14px; color: #2c3e50;
+        }
+        .contact-row .ci {
+            width: 32px; height: 32px;
+            background: #fff5eb; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #e67e22; font-size: 14px; flex-shrink: 0;
+        }
+        .contact-row a { color: #e67e22; text-decoration: none; font-weight: 600; }
+        .contact-row a:hover { text-decoration: underline; }
+        .btn-email {
+            display: block; width: 100%;
+            background: #e67e22; color: white; border: none;
+            padding: 12px; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            margin-top: 6px; text-align: center; text-decoration: none;
+            box-sizing: border-box;
+        }
+        .btn-email:hover { background: #d35400; }
+        .btn-linkedin {
+            display: block; width: 100%;
+            background: #0077b5; color: white; border: none;
+            padding: 12px; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            margin-top: 8px; text-align: center; text-decoration: none;
+            box-sizing: border-box;
+        }
+        .btn-linkedin:hover { background: #005f91; }
+
+	/* --- AJUSTEMENT MOBILE POUR LA RECHERCHE --- */
+        @media (max-width: 600px) {
+            .search-panel {
+                width: 90% !important;
+                left: 5% !important;
+                box-sizing: border-box;
+            }
+            .search-panel input {
+                width: 100% !important;
+            }
+            .leaflet-interactive {
+                stroke-width: 2px;
+            }
+            #header-band { 
+                height: 70px;
+            }
+            #header-band h1 {
+                font-size: 20px; 
+                margin-bottom: 5px;
+            }
+            .leaflet-popup-content { width: 230px !important; {
+            }
+            .leaflet-interactive {
+                stroke-width: 2px;
+            }
+            #map {
+                height: calc(100vh - 70px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INTRO -->
+    <div id="intro-overlay">
+        <div class="intro-card">
+            <h2>Kiosque 974</h2>
+            <p>Cliquez sur "Commencer" pour explorer la carte des kiosques et aires de pique-nique de l'île.</p>
+            <button class="btn-start" onclick="closeIntro()">COMMENCER</button>
+        </div>
+    </div>
+
+    <!-- MODAL CONTACT — CARTE DE VISITE -->
+    <div id="contact-modal">
+        <div class="contact-card">
+            <div class="contact-card-header">
+                <button class="contact-card-close" onclick="closeContact()">✕</button>
+                <h2>Robin Maume</h2>
+                <div class="company">🌍 Geomark SIG Solutions</div>
+            </div>
+            <div class="contact-card-body">
+                <div class="contact-row">
+                    <div class="ci"><i class="fas fa-phone"></i></div>
+                    <div>
+                        <div>(+33) 06.13.18.47.10</div>
+                        <div>(+262) 06.93.61.69.23</div>
+                    </div>
+                </div>
+                <div class="contact-row">
+                    <div class="ci"><i class="fas fa-envelope"></i></div>
+                    <div><a href="mailto:societegeomark@gmail.com">societegeomark@gmail.com</a></div>
+                </div>
+                <div class="contact-row">
+                    <div class="ci"><i class="fab fa-linkedin"></i></div>
+                    <div><a href="https://www.linkedin.com/in/robin-maume/" target="_blank">Robin Maume | LinkedIn</a></div>
+                </div>
+                <a class="btn-email" href="mailto:societegeomark@gmail.com?subject=Contact%20Kiosque%20974&body=Bonjour%20Robin%2C%0A%0A">
+                    <i class="fas fa-paper-plane"></i> &nbsp;Envoyer un e-mail
+                </a>
+                <a class="btn-linkedin" href="https://www.linkedin.com/in/robin-maume/" target="_blank">
+                    <i class="fab fa-linkedin"></i> &nbsp;Voir le profil LinkedIn
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div id="header-band">
+        <img src="bandeau.png" alt="Paysage Réunion Kiosques">
+        <h1>KIOSQUE 9 7 4</h1>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html" class="active"><i class="fas fa-home"></i></a></li>
+                <li><a href="#" onclick="openContact(); return false;">CONTACT</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="donnees.js"></script>
+
+    <script>
+
+        /* ---- INTRO ---- */
+        function closeIntro() {
+            document.getElementById('intro-overlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; }, 500);
+        }
+
+        /* ---- CONTACT ---- */
+        function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+        function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
+        document.getElementById('contact-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeContact();
+        });
+
+        /* ---- FONDS DE CARTE ---- */
+        var reunionBounds = L.latLngBounds(L.latLng(-21.45, 55.15), L.latLng(-20.80, 55.95));
+
+        // OSM standard — fonctionne en ouvrant le fichier localement (file://)
+        // Si hébergé sur un serveur, ajouter dans les headers : User-Agent et Referer
+        var osm = L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            subdomains: ['a','b','c'],
+            maxNativeZoom: 19, maxZoom: 21,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+
+        var carto = L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxNativeZoom: 18, maxZoom: 21,
+            attribution: '&copy; CARTO &copy; OpenStreetMap contributors'
+        });
+
+        var googleHybrid = L.tileLayer(
+            'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            subdomains: ['mt0','mt1','mt2','mt3'],
+            maxNativeZoom: 20, maxZoom: 21,
+            attribution: '&copy; Google'
+        });
+
+        // OSM en fond par défaut
+        var map = L.map('map', { 
+            center: [-21.115, 55.536], 
+            zoom: 11, 
+            minZoom: 10,
+            maxBounds: reunionBounds,
+            zoomControl: false,
+            layers: [osm],
+	    tap: true,         // <-- AJOUTER CECI
+            tapTolerance: 20   // <-- AJOUTER CECI (marge d'erreur pour le doigt)
+        });
+
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+        L.control.layers(
+            { "🌍 Plan (OSM)": osm, "🏙️ Plan (Carto)": carto, "🛰️ Satellite": googleHybrid },
+            null,
+            { collapsed: true, position: 'topright' }
+        ).addTo(map);
+
+        L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
+
+        /* ---- FLÈCHE NORD ---- */
+        var north = L.control({position: 'bottomright'});
+        north.onAdd = function() {
+            var div = L.DomUtil.create('div', 'north-arrow');
+            div.innerHTML = '<span style="font-weight:bold;font-size:12px;">N</span>'
+                          + '<img src="https://img.icons8.com/ios-filled/50/000000/long-arrow-up.png">';
+            return div;
+        };
+        north.addTo(map);
+
+        /* ---- DRAPEAU RÉUNION (fichier local SVG) ---- */
+        var flagControl = L.control({position: 'bottomright'});
+        flagControl.onAdd = function() {
+            var div = L.DomUtil.create('div', 'reunion-flag-control');
+            div.title = 'Île de La Réunion';
+            div.innerHTML = '<img src="Drapeau_974.jpg" alt="Drapeau Réunion">';
+            return div;
+        };
+        flagControl.addTo(map);
+
+        /* ---- CHAMPS POPUP ---- */
+        var fieldConfig = {
+            'descriptio': { label: 'Description',  icon: 'https://img.icons8.com/color/48/edit-property.png',         full: true  },
+            'bbq':        { label: 'Barbecue',      icon: 'https://img.icons8.com/color/48/fire-element.png',          full: false },
+            'access':     { label: 'Accès',         icon: 'https://img.icons8.com/color/48/parking.png',               full: false },
+            'table':      { label: 'Table',         icon: 'https://img.icons8.com/color/48/picnic-table.png',          full: false },
+            'toilettes':  { label: 'Toilettes',     icon: 'https://img.icons8.com/color/48/toilet.png',                full: false },
+            'Ville':      { label: 'Ville',         icon: 'https://img.icons8.com/color/48/city.png',                  full: false },
+            'Lieu':       { label: 'Lieu',          icon: 'https://img.icons8.com/color/48/landscape.png',             full: false },
+            'Etat':       { label: 'État',          icon: 'https://img.icons8.com/color/48/wrench.png',                full: false },
+            'Owner':      { label: 'Propriétaire',  icon: 'https://img.icons8.com/color/48/user-male-circle--v1.png', full: true  }
+        };
+
+        /* ---- LAYER KIOSQUES ---- */
+        if (typeof mesKiosques !== 'undefined') {
+            // Détecter si on est sur mobile pour la taille du point
+            var mobileSize = (window.innerWidth < 600) ? 10 : 6;
+
+            L.geoJSON(mesKiosques, {
+                pointToLayer: function(f, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: mobileSize,
+                        fillColor: "#e67e22",
+                        color: "#d35400",
+                        weight: 1,
+                        fillOpacity: 0.6
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.on('click', function() { showPopup(feature, layer); });
+                }
+            }).addTo(map);
+        }
+
+        async function showPopup(feature, layer) {
+    var props = feature.properties;
+    
+    // 1. Structure de base de la popup (Design Index 2)
+    let html = `<div class="popup-header"><b>${props.Name || "Kiosque"}</b></div><div class="popup-grid">`;
+    
+    for (var key in fieldConfig) {
+        var conf = fieldConfig[key];
+        var val = props[key];
+        var display = (!val || val === "null") ? "N/A" : val;
+        if (key === 'Etat' && val && val !== "null") display = '<span class="status-badge">' + val + '</span>';
+        
+        html += `<div class="info-card ${conf.full ? 'full' : ''}">
+                    <span class="card-label">${conf.label}</span>
+                    <span class="card-value"><img src="${conf.icon}" class="card-icon"> ${display}</span>
+                 </div>`;
+    }
+
+    // Zone d'attente pour les données API (Altitude/Météo)
+    let uniqueId = props.id || Math.random().toString(36).substr(2, 9);
+    html += `<div id="extra-data-${uniqueId}" class="info-card full" style="text-align:center; background:#f9f9f9; min-height:40px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-spinner fa-spin"></i> &nbsp; Chargement altitude & météo...
+             </div></div>`;
+    
+    layer.bindPopup(html, { 
+        maxWidth: window.innerWidth * 0.85, 
+        offset: L.point(0, -10) 
+    }).openPopup();
+
+    // 2. Appel aux API (Logique Index 3)
+    const lat = feature.geometry.coordinates[1];
+    const lon = feature.geometry.coordinates[0];
+
+    try {
+        const [resAlt, resW] = await Promise.all([
+            fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`),
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a778e47f93ab9c079350387fafebb65e&units=metric&lang=fr`)
+        ]);
+
+        const dataAlt = await resAlt.json();
+        const w = await resW.json();
+        const alt = dataAlt.results[0].elevation;
+
+        // Mise à jour de la popup avec les résultats
+        const updatedContent = `
+            <div style="display: flex; gap: 5px; width: 100%; margin-top:5px;">
+                <div style="flex:1; background:#e8f5e9; padding:8px; border-radius:5px; border-left:4px solid #27ae60; text-align:left;">
+                    <small style="color:gray; font-size:10px; display:block;">ALTITUDE</small>
+                    <b style="color:#2c3e50;"><i class="fa-solid fa-mountain" style="color:#27ae60;"></i> ${Math.round(alt)} m</b>
+                </div>
+                <div style="flex:1; background:#fff7f2; padding:8px; border-radius:5px; border-left:4px solid #3498db; text-align:left;">
+                    <small style="color:gray; font-size:10px; display:block;">MÉTÉO LIVE</small>
+                    <b style="color:#2c3e50;">${Math.round(w.main.temp)}°C</b> <span style="font-size:10px;">| <i class="fa-solid fa-wind"></i> ${Math.round(w.wind.speed * 3.6)} km/h</span>
+                </div>
+            </div>`;
+
+        const container = document.getElementById(`extra-data-${uniqueId}`);
+        if (container) container.innerHTML = updatedContent;
+
+    } catch (e) {
+        const container = document.getElementById(`extra-data-${uniqueId}`);
+        if (container) container.innerHTML = "<span style='color:red; font-size:11px;'>Données météo indisponibles</span>";
+    }
+}
+
+    </script>
+</body>
+</html>
