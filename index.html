@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kiosque 974 - Version Finale Expert</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+@keyframes wave-pulse {
+    0% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.05); }
+    100% { opacity: 0.3; transform: scale(1); }
+}
+.wave-pattern {
+    pointer-events: none; opacity: 0.4;
+    filter: brightness(0) invert(1);
+    animation: wave-pulse 4s infinite ease-in-out;
+}
+#map {
+    background-color: #add8e6;
+    box-shadow: inset 0 0 50px rgba(255,255,255,0.5);
+}
+body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+ 
+/* BANDEAU */
+#header-band {
+    height: 100px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+#header-band img {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center 60%;
+    z-index: -1; filter: brightness(0.7);
+}
+#header-band h1 {
+    color: white; font-size: 24px;
+    text-shadow: 3px 3px 10px rgba(0,0,0,0.8);
+    margin: 0 0 15px 0; letter-spacing: 5px;
+}
+.main-nav { width: 100%; }
+.main-nav ul {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; justify-content: center; gap: 5px;
+}
+.main-nav li a {
+    display: block; text-decoration: none; color: white;
+    background: rgba(0,0,0,0.6);
+    padding: 10px 25px; font-weight: bold; font-size: 14px;
+    border-radius: 8px 8px 0 0; transition: all 0.3s ease;
+    border-bottom: 4px solid transparent; cursor: pointer;
+}
+.main-nav li a i { font-size: 18px; }
+.main-nav li a:hover, .main-nav li a.active {
+    background: #e67e22; border-bottom: 4px solid #fff;
+}
+ 
+#map { height: calc(100vh - 100px); width: 100%; }
+ 
+/* INTRO */
+#intro-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; transition: opacity 0.5s;
+}
+.intro-card {
+    background: white; padding: 40px; border-radius: 20px;
+    max-width: 450px; text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+.btn-start {
+    background: #e67e22; color: white; border: none;
+    padding: 15px 40px; border-radius: 30px; cursor: pointer;
+    font-weight: bold; font-size: 16px; transition: 0.3s;
+}
+ 
+/* RECHERCHE */
+.search-panel {
+    background: white; padding: 8px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    width: 180px; position: fixed;
+    left: 50%; transform: translateX(-50%);
+    top: 110px; margin: 0 !important; z-index: 1000;
+}
+.search-panel input {
+    width: 100%; padding: 8px; border-radius: 4px;
+    border: 1px solid #ccc; font-size: 12px;
+    outline: none; box-sizing: border-box;
+}
+.btn-search {
+    width: 100%; background: #27ae60; color: white;
+    border: none; padding: 8px; border-radius: 4px;
+    cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 11px;
+}
+ 
+/* POPUP */
+.leaflet-popup-content-wrapper {
+    padding: 0; border-radius: 16px; overflow: hidden;
+    background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    animation: popSlide 0.4s cubic-bezier(.22,1,.36,1);
+}
+@keyframes popSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.leaflet-popup-content { margin: 0 !important; width: 300px !important; }
+ 
+.pp-head {
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    color: #fff; padding: 14px 48px 14px 16px; position: relative;
+}
+.pp-head .pp-title { font-size: 15px; font-weight: 700; letter-spacing: .5px; }
+.pp-head .pp-subtitle { font-size: 11px; opacity: .85; margin-top: 2px; }
+.pp-head .pp-badge {
+    position: absolute; top: 14px; right: 36px;
+    background: rgba(255,255,255,.25);
+    border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700;
+}
+.pp-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; padding: 10px; background: #f8f9fa;
+}
+.pp-card {
+    background: #fff; border-radius: 10px; border: 1.5px solid #eee;
+    padding: 7px 9px; display: flex; align-items: flex-start; gap: 7px;
+    transition: border-color .2s;
+}
+.pp-card:hover { border-color: #e67e22; }
+.pp-card.full { grid-column: span 2; }
+.pp-card .pp-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+}
+.pp-card .pp-label { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: 700; letter-spacing: .5px; }
+.pp-card .pp-val   { font-size: 12px; color: #2c3e50; font-weight: 600; margin-top: 1px; }
+ 
+/* METEO CARD */
+.pp-meteo {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2980b9 100%);
+    border-radius: 12px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; border: none;
+}
+.pp-meteo-icon { font-size: 38px; line-height: 1; }
+.pp-meteo-main { flex: 1; }
+.pp-meteo-temp { font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+.pp-meteo-desc { font-size: 11px; color: rgba(255,255,255,.8); margin-top: 2px; text-transform: capitalize; }
+.pp-meteo-right { text-align: right; }
+.pp-meteo-stat { font-size: 10px; color: rgba(255,255,255,.8); margin-bottom: 3px; }
+.pp-meteo-stat span { font-weight: 700; font-size: 12px; color: #fff; }
+ 
+.pp-meteo-loading {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2980b9 100%);
+    border-radius: 12px; padding: 14px; text-align: center;
+    color: #fff; font-size: 12px;
+    animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+ 
+.pp-footer {
+    padding: 8px 10px; background: #fff;
+    border-top: 1px solid #f0f0f0;
+    display: flex; gap: 6px;
+}
+.pp-btn {
+    flex: 1; padding: 7px; border-radius: 8px; border: none;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    text-decoration: none;
+}
+.pp-btn-nav  { background: #e67e22; color: #fff; }
+.pp-btn-nav:hover { background: #d35400; }
+.pp-btn-info { background: #eaf3de; color: #27500a; }
+ 
+.leaflet-container .leaflet-popup-close-button {
+    right: 8px !important; top: 8px !important;
+    background: rgba(255,255,255,.25) !important;
+    color: #fff !important; border-radius: 50% !important;
+    width: 22px !important; height: 22px !important;
+    line-height: 22px !important; font-size: 14px !important;
+}
+ 
+/* MODAL CONTACT */
+#contact-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 10000;
+    align-items: center; justify-content: center;
+}
+#contact-modal.open { display: flex; }
+.contact-card {
+    background: white; border-radius: 20px; padding: 0;
+    max-width: 420px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4); overflow: hidden;
+}
+.contact-card-header {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white; padding: 28px 30px 20px; position: relative;
+}
+.contact-card-header h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: 1px; }
+.contact-card-header .company { font-size: 13px; opacity: 0.9; font-weight: 600; }
+.contact-card-close {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(255,255,255,0.2); border: none; color: white;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 16px; line-height: 28px; text-align: center;
+}
+.contact-card-body { padding: 22px 28px; }
+.contact-row {
+    display: flex; align-items: center;
+    gap: 12px; margin-bottom: 14px;
+    font-size: 14px; color: #2c3e50;
+}
+.contact-row .ci {
+    width: 32px; height: 32px; background: #fff5eb; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #e67e22; font-size: 14px; flex-shrink: 0;
+}
+.contact-row a { color: #e67e22; text-decoration: none; font-weight: 600; }
+.btn-email {
+    display: block; width: 100%; background: #e67e22; color: white;
+    border: none; padding: 12px; border-radius: 8px;
+    font-size: 14px; font-weight: bold; cursor: pointer;
+    margin-top: 6px; text-align: center; text-decoration: none; box-sizing: border-box;
+}
+.btn-linkedin {
+    display: block; width: 100%; background: #0077b5; color: white;
+    border: none; padding: 12px; border-radius: 8px;
+    font-size: 14px; font-weight: bold; cursor: pointer;
+    margin-top: 8px; text-align: center; text-decoration: none; box-sizing: border-box;
+}
+ 
+/* LOCALISATION */
+.locate-btn {
+    background: white; border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 4px; padding: 6px 8px;
+    cursor: pointer; font-size: 18px;
+    display: block; line-height: 1;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    transition: background 0.2s;
+}
+.locate-btn:hover { background: #f4f4f4; }
+ 
+/* MOBILE */
+@media (max-width: 600px) {
+    .search-panel { width: 90% !important; left: 5% !important; transform: none !important; box-sizing: border-box; }
+    .search-panel input { width: 100% !important; }
+    #header-band { height: 70px; }
+    #header-band h1 { font-size: 18px; margin-bottom: 5px; }
+    #map { height: calc(100vh - 70px); }
+    .main-nav li a { padding: 8px 14px; font-size: 12px; }
+    .leaflet-popup-content { width: 260px !important; }
+}
+    </style>
+</head>
+<body>
+ 
+<!-- INTRO -->
+<div id="intro-overlay">
+    <div class="intro-card">
+        <h2>🏕️ Kiosque 974</h2>
+        <p>Découvrez la carte interactive des kiosques et aires de pique-nique de La Réunion.</p>
+        <button class="btn-start" onclick="closeIntro()">COMMENCER</button>
+    </div>
+</div>
+ 
+<!-- MODAL CONTACT -->
+<div id="contact-modal">
+    <div class="contact-card">
+        <div class="contact-card-header">
+            <button class="contact-card-close" onclick="closeContact()">✕</button>
+            <h2>Robin Maume</h2>
+            <div class="company">🌍 Geomark SIG Solutions</div>
+        </div>
+        <div class="contact-card-body">
+            <div class="contact-row">
+                <div class="ci"><i class="fas fa-phone"></i></div>
+                <div>
+                    <div>(+33) 06.13.18.47.10</div>
+                    <div>(+262) 06.93.61.69.23</div>
+                </div>
+            </div>
+            <div class="contact-row">
+                <div class="ci"><i class="fas fa-envelope"></i></div>
+                <div><a href="mailto:societegeomark@gmail.com">societegeomark@gmail.com</a></div>
+            </div>
+            <div class="contact-row">
+                <div class="ci"><i class="fab fa-linkedin"></i></div>
+                <div><a href="https://www.linkedin.com/in/robin-maume/" target="_blank">Robin Maume | LinkedIn</a></div>
+            </div>
+            <a class="btn-email" href="mailto:societegeomark@gmail.com?subject=Contact%20Kiosque%20974&body=Bonjour%20Robin%2C%0A%0A">
+                <i class="fas fa-paper-plane"></i> &nbsp;Envoyer un e-mail
+            </a>
+            <a class="btn-linkedin" href="https://www.linkedin.com/in/robin-maume/" target="_blank">
+                <i class="fab fa-linkedin"></i> &nbsp;Voir le profil LinkedIn
+            </a>
+        </div>
+    </div>
+</div>
+ 
+<!-- HEADER -->
+<div id="header-band">
+    <img src="bandeau.png" alt="Paysage Réunion Kiosques">
+    <h1>KIOSQUE 9 7 4</h1>
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html" class="active"><i class="fas fa-home"></i></a></li>
+            <li><a href="#" onclick="openContact(); return false;">CONTACT</a></li>
+        </ul>
+    </nav>
+</div>
+ 
+<!-- CARTE -->
+<div id="map"></div>
+ 
+<!-- BARRE DE RECHERCHE -->
+<div class="search-panel">
+    <input type="text" id="p-in" placeholder="🔍 Rechercher un lieu..." onkeydown="if(event.key==='Enter') rs()">
+    <button class="btn-search" onclick="rs()">Rechercher</button>
+</div>
+ 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="donnees.js"></script>
+ 
+<script>
+    var OWM_KEY = 'a778e47f93ab9c079350387fafebb65e';
+ 
+    /* ─── FONCTIONS UTILITAIRES MÉTÉO ─────────────────────────────── */
+    function getWeatherVisual(code, isDay) {
+        if (code >= 200 && code < 300) return { icon: '⛈️',  bg: 'linear-gradient(135deg,#2c3e50,#4a5568)', label: 'Orageux' };
+        if (code >= 300 && code < 400) return { icon: '🌦️',  bg: 'linear-gradient(135deg,#3d5a80,#5b8db8)', label: 'Bruine' };
+        if (code >= 500 && code < 600) {
+            if (code === 500) return { icon: '🌧️', bg: 'linear-gradient(135deg,#2d4a6e,#3d7abf)', label: 'Pluie légère' };
+            if (code >= 502) return { icon: '⛈️',  bg: 'linear-gradient(135deg,#1a2f4e,#2d5a8e)', label: 'Forte pluie' };
+            return { icon: '🌧️', bg: 'linear-gradient(135deg,#2d4a6e,#3d7abf)', label: 'Pluie' };
+        }
+        if (code >= 600 && code < 700) return { icon: '❄️',  bg: 'linear-gradient(135deg,#5b8fb9,#9fc8e8)', label: 'Neige' };
+        if (code >= 700 && code < 800) return { icon: '🌫️',  bg: 'linear-gradient(135deg,#6b7280,#9ca3af)', label: 'Brume' };
+        if (code === 800) return isDay
+            ? { icon: '☀️', bg: 'linear-gradient(135deg,#e67e22,#f39c12)', label: 'Ciel dégagé' }
+            : { icon: '🌙', bg: 'linear-gradient(135deg,#1a1a2e,#16213e)', label: 'Nuit claire' };
+        if (code === 801) return { icon: '🌤️', bg: 'linear-gradient(135deg,#3b82f6,#60a5fa)', label: 'Peu nuageux' };
+        if (code === 802) return { icon: '⛅',  bg: 'linear-gradient(135deg,#2563eb,#60a5fa)', label: 'Partiellement nuageux' };
+        return { icon: '☁️', bg: 'linear-gradient(135deg,#4b5563,#6b7280)', label: 'Nuageux' };
+    }
+ 
+    /* ─── INITIALISATION DE LA CARTE ──────────────────────────────── */
+    var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
+ 
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+    });
+    var googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        subdomains: ['mt0','mt1','mt2','mt3'], attribution: '&copy; Google Satellite', maxZoom: 20
+    });
+    var googleMap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        subdomains: ['mt0','mt1','mt2','mt3'], attribution: '&copy; Google Maps', maxZoom: 20
+    });
+ 
+    /* La carte est initialisée avec OSM par défaut */
+    var map = L.map('map', {
+        center: [-21.115, 55.536],
+        zoom: 11,
+        minZoom: 10,
+        maxBounds: reunionBounds,
+        zoomControl: false,
+        layers: [osm],   // OSM par défaut
+        tap: true,
+        tapTolerance: 20
+    });
+ 
+    /* Contrôle des couches — OSM par défaut sélectionné */
+    var baseLayers = {
+        '<span style="font-weight:600">🗺️ OpenStreetMap</span>': osm,
+        '<span style="font-weight:600">🛰️ Google Satellite</span>': googleSat,
+        '<span style="font-weight:600">📍 Google Maps</span>': googleMap
+    };
+    L.control.layers(baseLayers, null, { position: 'topright', collapsed: false }).addTo(map);
+ 
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+    L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
+ 
+    /* ─── BOUTON LOCALISATION ─────────────────────────────────────── */
+    var LocateControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function() {
+            var btn = L.DomUtil.create('button', 'locate-btn');
+            btn.innerHTML = '📍';
+            btn.title = 'Ma position';
+            L.DomEvent.on(btn, 'click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                locateMe();
+            });
+            return btn;
+        }
+    });
+    map.addControl(new LocateControl());
+ 
+    var userMarker = null;
+ 
+    function locateMe() {
+        if (!navigator.geolocation) { alert("Géolocalisation non supportée."); return; }
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            var lat = pos.coords.latitude;
+            var lon = pos.coords.longitude;
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.circleMarker([lat, lon], {
+                radius: 10, fillColor: '#2980b9', color: '#fff',
+                weight: 3, fillOpacity: 0.95
+            }).addTo(map).bindPopup('📍 <b>Vous êtes ici</b>').openPopup();
+            map.setView([lat, lon], 15);
+        }, function() { alert("Impossible d'obtenir votre position."); });
+    }
+ 
+    /* ─── RAYON DES POINTS SELON LE ZOOM ─────────────────────────── */
+    function getRadius(zoom) {
+        if (zoom <= 11) return 4;
+        if (zoom <= 13) return 6;
+        if (zoom <= 15) return 9;
+        return 12;
+    }
+ 
+    /* ─── AFFICHAGE DES KIOSQUES ──────────────────────────────────── */
+    var kiosquesLayer;
+    if (typeof mesKiosques !== 'undefined') {
+        kiosquesLayer = L.geoJSON(mesKiosques, {
+            pointToLayer: function(feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: getRadius(map.getZoom()),
+                    fillColor: "#e67e22",
+                    color: "#ffffff",
+                    weight: 2,
+                    fillOpacity: 0.85
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                layer.on('click', function() {
+                    showPopup(feature, layer);
+                });
+            }
+        }).addTo(map);
+ 
+        map.on('zoomend', function() {
+            var r = getRadius(map.getZoom());
+            kiosquesLayer.eachLayer(function(l) { if (l.setRadius) l.setRadius(r); });
+        });
+    }
+ 
+    /* ─── POPUP AVEC MÉTÉO ─────────────────────────────────────────── */
+    async function showPopup(feature, layer) {
+        var props = feature.properties;
+        var lat   = feature.geometry.coordinates[1];
+        var lon   = feature.geometry.coordinates[0];
+ 
+        /* Champs attributaires avec icônes emoji */
+        var fieldConfig = {
+            'Ville':      { label: 'Ville',       icon: '🏙️', bg: '#fff3e0', color: '#e67e22' },
+            'Lieu':       { label: 'Lieu',        icon: '📌', bg: '#e8f5e9', color: '#27ae60' },
+            'Etat':       { label: 'État',        icon: '🔧', bg: '#fce4ec', color: '#e74c3c' },
+            'material':   { label: 'Matériau',    icon: '🪵', bg: '#efebe9', color: '#795548' },
+            'bbq':        { label: 'BBQ',         icon: '🔥', bg: '#fff8e1', color: '#f39c12' },
+            'wheelchair': { label: 'Accessibilité', icon: '♿', bg: '#e3f2fd', color: '#1976d2' },
+            'access':     { label: 'Accès',       icon: '🔓', bg: '#f3e5f5', color: '#9c27b0' },
+            'descriptio': { label: 'Description', icon: '📝', bg: '#e0f7fa', color: '#00838f', full: true }
+        };
+ 
+        var uid = 'meteo_' + Math.random().toString(36).substr(2, 8);
+ 
+        /* En-tête */
+        var etatVal = (props['Etat'] || '').toLowerCase();
+        var etatStyle = '';
+        if (etatVal.includes('bon') || etatVal.includes('ouvert')) etatStyle = 'color:#27ae60';
+        else if (etatVal.includes('ferm') || etatVal.includes('dégrad') || etatVal.includes('détruit')) etatStyle = 'color:#e74c3c';
+ 
+        var html = '<div class="pp-head">'
+            + '<div class="pp-title">' + (props.Name || 'Kiosque') + '</div>'
+            + (props.Ville ? '<div class="pp-subtitle">📍 ' + props.Ville + (props.Lieu ? ' — ' + props.Lieu : '') + '</div>' : '')
+            + (props.Etat  ? '<div class="pp-badge" style="' + etatStyle + '">' + props.Etat + '</div>' : '')
+            + '</div>';
+ 
+        /* Grille attributs */
+        html += '<div class="pp-grid">';
+ 
+        for (var key in fieldConfig) {
+            var cfg = fieldConfig[key];
+            var val = props[key];
+            if (!val || val === '' || val === 'null' || val === 'N/A') continue;
+            if (key === 'Ville' || key === 'Lieu') continue; // déjà dans l'en-tête
+            html += '<div class="pp-card' + (cfg.full ? ' full' : '') + '">'
+                + '<div class="pp-icon" style="background:' + cfg.bg + ';color:' + cfg.color + '">' + cfg.icon + '</div>'
+                + '<div>'
+                + '<div class="pp-label">' + cfg.label + '</div>'
+                + '<div class="pp-val">' + val + '</div>'
+                + '</div></div>';
+        }
+ 
+        /* Bloc météo — loading state */
+        html += '<div id="' + uid + '" class="pp-meteo-loading">⛅ Chargement météo...</div>';
+ 
+        html += '</div>'; /* fin pp-grid */
+ 
+        /* Footer navigation */
+        var navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon;
+        html += '<div class="pp-footer">'
+            + '<a class="pp-btn pp-btn-nav" href="' + navUrl + '" target="_blank">🧭 Naviguer</a>'
+            + '<button class="pp-btn pp-btn-info" onclick="this.closest(\'.leaflet-popup\').style.display=\'none\'">✕ Fermer</button>'
+            + '</div>';
+ 
+        layer.bindPopup(html, { maxWidth: 320, autoPan: true }).openPopup();
+ 
+        /* ── Appel API Météo ── */
+        try {
+            var resp = await fetch(
+                'https://api.openweathermap.org/data/2.5/weather?lat=' + lat
+                + '&lon=' + lon
+                + '&appid=' + OWM_KEY
+                + '&units=metric&lang=fr'
+            );
+            var w = await resp.json();
+            var el = document.getElementById(uid);
+            if (!el) return;
+ 
+            var code   = w.weather[0].id;
+            var isDay  = (w.dt > w.sys.sunrise && w.dt < w.sys.sunset);
+            var vis    = getWeatherVisual(code, isDay);
+            var temp   = Math.round(w.main.temp);
+            var feels  = Math.round(w.main.feels_like);
+            var hum    = w.main.humidity;
+            var wind   = Math.round(w.wind.speed * 3.6); // m/s → km/h
+            var desc   = w.weather[0].description;
+ 
+            el.outerHTML =
+                '<div class="pp-meteo">'
+                + '<div class="pp-meteo-icon">' + vis.icon + '</div>'
+                + '<div class="pp-meteo-main">'
+                +   '<div class="pp-meteo-temp">' + temp + '°C</div>'
+                +   '<div class="pp-meteo-desc">' + desc + '</div>'
+                + '</div>'
+                + '<div class="pp-meteo-right">'
+                +   '<div class="pp-meteo-stat">💧 Humidité&nbsp;<span>' + hum + '%</span></div>'
+                +   '<div class="pp-meteo-stat">💨 Vent&nbsp;<span>' + wind + ' km/h</span></div>'
+                +   '<div class="pp-meteo-stat">🌡️ Ressenti&nbsp;<span>' + feels + '°C</span></div>'
+                + '</div>'
+                + '</div>';
+ 
+        } catch(e) {
+            var el = document.getElementById(uid);
+            if (el) el.innerHTML = '⚠️ Météo indisponible';
+        }
+    }
+ 
+    /* ─── RECHERCHE NOMINATIM ────────────────────────────────────── */
+    async function rs() {
+        var q = document.getElementById('p-in').value;
+        if (!q) return;
+        var url = 'https://nominatim.openstreetmap.org/search?format=json&q='
+            + encodeURIComponent(q + ' La Réunion') + '&limit=1';
+        try {
+            var res = await fetch(url);
+            var d = await res.json();
+            if (d.length > 0) map.setView([d[0].lat, d[0].lon], 17);
+            else alert("Lieu non trouvé.");
+        } catch(e) { console.error(e); }
+    }
+ 
+    /* ─── FERMETURE INTRO + LOCALISATION AUTO ────────────────────── */
+    function closeIntro() {
+        var overlay = document.getElementById('intro-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(function() {
+            overlay.style.display = 'none';
+            /* Zoom sur la position utilisateur après fermeture */
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        var lat = pos.coords.latitude;
+                        var lon = pos.coords.longitude;
+                        if (userMarker) map.removeLayer(userMarker);
+                        userMarker = L.circleMarker([lat, lon], {
+                            radius: 10, fillColor: '#2980b9', color: '#fff',
+                            weight: 3, fillOpacity: 0.95
+                        }).addTo(map).bindPopup('📍 <b>Vous êtes ici</b>').openPopup();
+                        map.setView([lat, lon], 14);
+                    },
+                    function() {
+                        /* Si refus ou erreur, on reste sur La Réunion */
+                    }
+                );
+            }
+        }, 500);
+    }
+ 
+    function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+    function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
+</script>
+</body>
+</html>
