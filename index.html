@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>Kiosque 974 - Version Finale Expert</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -14,19 +13,21 @@
     50% { opacity: 0.5; transform: scale(1.05); }
     100% { opacity: 0.3; transform: scale(1); }
 }
-
+ 
 .wave-pattern {
-    pointer-events: none; /* Pour que les vagues ne bloquent pas le clic sur la carte */
+    pointer-events: none;
     opacity: 0.4;
-    filter: brightness(0) invert(1); /* Rend le motif blanc si l'image est noire */
+    filter: brightness(0) invert(1);
     animation: wave-pulse 4s infinite ease-in-out;
 }
-# {
-    background-color: #add8e6; /* Un bleu plus océanique */
-    box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.5); /* Effet de brillance intérieure */
+ 
+#map {
+    background-color: #add8e6;
+    box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.5);
 }
+ 
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-
+ 
         /* --- BANDEAU IMAGE ET ONGLETS --- */
         #header-band { 
             height: 100px;
@@ -39,7 +40,7 @@
             z-index: 1000;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-
+ 
         #header-band img {
             position: absolute;
             top: 0; left: 0;
@@ -49,7 +50,7 @@
             z-index: -1; 
             filter: brightness(0.7);
         }
-
+ 
         #header-band h1 { 
             color: white; 
             font-size: 24px; 
@@ -57,7 +58,7 @@
             margin: 0 0 15px 0;
             letter-spacing: 5px;
         }
-
+ 
         .main-nav { width: 100%; }
         .main-nav ul {
             list-style: none;
@@ -66,7 +67,7 @@
             justify-content: center;
             gap: 5px;
         }
-
+ 
         .main-nav li a {
             display: block;
             text-decoration: none;
@@ -80,22 +81,22 @@
             border-bottom: 4px solid transparent;
             cursor: pointer;
         }
-
+ 
         .main-nav li a i { font-size: 18px; }
-
+ 
         .main-nav li a:hover, .main-nav li a.active {
             background: #e67e22;
             border-bottom: 4px solid #fff;
         }
-
+ 
         /* CARTE */
-        # { height: calc(100vh - 180px); width: 100%; background: #eee; }
-
+        #map { height: calc(100vh - 100px); width: 100%; }
+ 
         /* INTRO */
         #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
         .intro-card { background: white; padding: 40px; border-radius: 20px; max-width: 450px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .btn-start { background: #e67e22; color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-
+ 
         /* RECHERCHE */
         .search-panel { 
            background: white; 
@@ -106,13 +107,13 @@
            position: fixed;
            left: 50%;
            transform: translateX(-50%);
-           top: 110px; /* Ajustez cette valeur selon la hauteur de votre bandeau */
+           top: 110px;
            margin: 0 !important;
            z-index: 1000; 
-       }
+        }
         .search-panel input { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; outline: none; box-sizing: border-box; }
         .btn-search { width: 100%; background: #27ae60; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 11px; }
-
+ 
         /* POPUP */
         .leaflet-popup-content-wrapper { padding: 0; border-radius: 15px; overflow: hidden; background: #fdfdfd; animation: slowSlideUp 0.8s ease-out; }
         @keyframes slowSlideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -124,7 +125,7 @@
             border-radius: 50% !important; width: 22px !important; height: 22px !important;
             line-height: 22px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;
         }
-
+ 
         .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; background: #fff; }
         .info-card { background: #f8f9fa; padding: 8px; border-radius: 6px; border-left: 3px solid #e67e22; }
         .info-card.full { grid-column: span 2; }
@@ -132,11 +133,11 @@
         .card-value { font-size: 12px; color: #2c3e50; font-weight: 600; display: flex; align-items: center; margin-top: 2px; }
         .card-icon { width: 16px; margin-right: 6px; }
         .status-badge { background: #27ae60; color: white; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
-
+ 
         /* FLÈCHE NORD */
         .north-arrow { padding: 8px; background: rgba(255,255,255,0.9); border-radius: 4px; border: 1px solid #ccc; text-align: center; }
         .north-arrow img { width: 20px; display: block; margin: 0 auto; }
-
+ 
         /* DRAPEAU RÉUNION */
         .reunion-flag-control {
             background: white;
@@ -153,7 +154,7 @@
             object-fit: cover;
             display: block;
         }
-
+ 
         /* COMPTEUR KIOSQUES */
         .kiosk-counter {
             background: white;
@@ -183,7 +184,7 @@
             font-size: 10px;
             color: #7f8c8d;
         }
-
+ 
         /* MODAL CONTACT */
         #contact-modal {
             display: none;
@@ -252,18 +253,18 @@
             box-sizing: border-box;
         }
         .btn-linkedin:hover { background: #005f91; }
-
-	/* --- AJUSTEMENT MOBILE POUR LA RECHERCHE --- */
+ 
+        /* --- AJUSTEMENT MOBILE POUR LA RECHERCHE --- */
         @media (max-width: 600px) {
             .search-panel {
                 width: 90% !important;
                 left: 5% !important;
+                transform: none !important;
                 box-sizing: border-box;
             }
             .search-panel input {
                 width: 100% !important;
             }
-            /* Correction ici : ajout de l'accolade fermante */
             .leaflet-interactive {
                 stroke-width: 15px;
             }
@@ -274,7 +275,7 @@
                 font-size: 20px; 
                 margin-bottom: 5px;
             }
-            # {
+            #map {
                 height: calc(100vh - 70px);
             }
         }
@@ -284,7 +285,7 @@
     </style>
 </head>
 <body>
-
+ 
     <!-- INTRO -->
     <div id="intro-overlay">
         <div class="intro-card">
@@ -293,7 +294,7 @@
             <button class="btn-start" onclick="closeIntro()">COMMENCER</button>
         </div>
     </div>
-
+ 
     <!-- MODAL CONTACT — CARTE DE VISITE -->
     <div id="contact-modal">
         <div class="contact-card">
@@ -327,7 +328,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- HEADER -->
     <div id="header-band">
         <img src="bandeau.png" alt="Paysage Réunion Kiosques">
@@ -339,140 +340,140 @@
             </ul>
         </nav>
     </div>
-
-    <div id=""></div>
-
+ 
+    <!-- CARTE — id="map" correctement renseigné -->
+    <div id="map"></div>
+ 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="donnees.js"></script>
-
+ 
     <script>
-
-		var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
-
-var osm = L.tileLayer('https://{s}.tile.openstreet.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-});
-
-var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB'
-});
-
-// 2. Initialisation de la CARTE (Une seule fois !)
-var map = L.map('map', {
-    center: [-21.115, 55.536],
-    zoom: 11,
-    minZoom: 10,
-    maxBounds: reunionBounds,
-    zoomControl: false,
-    layers: [osm],
-    tap: true,
-    tapTolerance: 20
-});
-
-// Ajout des contrôles
-L.control.zoom({ position: 'topleft' }).addTo(map);
-L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
-
-// 3. Fonctions d'interface
-function closeIntro() {
-    const intro = document.getElementById('intro-overlay');
-    intro.style.opacity = '0';
-    setTimeout(() => { intro.style.display = 'none'; }, 500);
-}
-function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
-function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
-
-// 4. Gestion de la taille des points
-function getRadius(zoom) {
-    if (zoom <= 11) return 4;
-    if (zoom <= 13) return 6;
-    if (zoom <= 15) return 9;
-    return 12;
-}
-
-// 5. Affichage des Kiosques
-if (typeof mesKiosques !== 'undefined') {
-    var kiosquesLayer = L.geoJSON(mesKiosques, {
-        pointToLayer: function(feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: getRadius(map.getZoom()),
-                fillColor: "#e67e22",
-                color: "#ffffff",
-                weight: 1,
-                fillOpacity: 0.8
-            });
-        },
-        onEachFeature: function(feature, layer) {
-            layer.on('click', function() {
-                showPopup(feature, layer);
-            });
-        }
-    }).addTo(map);
-
-    // Mise à jour au zoom
-    map.on('zoomend', function() {
-        var newRadius = getRadius(map.getZoom());
-        kiosquesLayer.eachLayer(function(layer) {
-            if (layer.setRadius) layer.setRadius(newRadius);
+ 
+        var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
+ 
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
         });
-    });
-}
-
-// 6. Fonction Recherche corrigée
-async function rs() {
-    var q = document.getElementById('p-in').value;
-    if (!q) return;
-    var url = 'https://nominatim.openstreet.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
-    try {
-        var res = await fetch(url);
-        var d = await res.json();
-        if (d.length > 0) {
-            map.setView([d[0].lat, d[0].lon], 17);
-        } else {
-            alert("Lieu non trouvé.");
+ 
+        var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CartoDB'
+        });
+ 
+        // Initialisation de la carte
+        var map = L.map('map', {
+            center: [-21.115, 55.536],
+            zoom: 11,
+            minZoom: 10,
+            maxBounds: reunionBounds,
+            zoomControl: false,
+            layers: [osm],
+            tap: true,
+            tapTolerance: 20
+        });
+ 
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
+ 
+        // Fonctions d'interface
+        function closeIntro() {
+            var intro = document.getElementById('intro-overlay');
+            intro.style.opacity = '0';
+            setTimeout(function() { intro.style.display = 'none'; }, 500);
         }
-    } catch (e) { console.error(e); }
-}
-
-// 7. Popup Dynamique
-async function showPopup(feature, layer) {
-    var props = feature.properties;
-    var fieldConfig = {
-        'descriptio': { label: 'Description', icon: 'https://img.icons8.com/color/48/edit-property.png', full: true },
-        'Ville': { label: 'Ville', icon: 'https://img.icons8.com/color/48/city.png', full: false },
-        'Etat': { label: 'État', icon: 'https://img.icons8.com/color/48/wrench.png', full: false }
-    };
-
-    let html = `<div class="popup-header"><b>${props.Name || "Kiosque"}</b></div><div class="popup-grid">`;
-    for (var key in fieldConfig) {
-        let conf = fieldConfig[key];
-        let val = props[key] || "N/A";
-        html += `<div class="info-card ${conf.full ? 'full' : ''}">
-                    <span class="card-label">${conf.label}</span>
-                    <span class="card-value"><img src="${conf.icon}" class="card-icon"> ${val}</span>
-                 </div>`;
-    }
-    
-    let uniqueId = "id" + Math.random().toString(36).substr(2, 9);
-    html += `<div id="${uniqueId}" class="info-card full" style="text-align:center;">Chargement météo...</div></div>`;
-
-    layer.bindPopup(html, { maxWidth: 300 }).openPopup();
-
-    // API Call pour Météo/Altitude
-    const lat = feature.geometry.coordinates[1];
-    const lon = feature.geometry.coordinates[0];
-    try {
-        const resW = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a778e47f93ab9c079350387fafebb65e&units=metric&lang=fr`);
-        const w = await resW.json();
-        document.getElementById(uniqueId).innerHTML = `<b>${Math.round(w.main.temp)}°C</b> - ${w.weather[0].description}`;
-    } catch (e) {
-        document.getElementById(uniqueId).innerHTML = "Météo indisponible";
-    }
-}
+        function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+        function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
+ 
+        // Gestion de la taille des points selon le zoom
+        function getRadius(zoom) {
+            if (zoom <= 11) return 4;
+            if (zoom <= 13) return 6;
+            if (zoom <= 15) return 9;
+            return 12;
         }
-    });
-});
-
+ 
+        // Affichage des kiosques
+        if (typeof mesKiosques !== 'undefined') {
+            var kiosquesLayer = L.geoJSON(mesKiosques, {
+                pointToLayer: function(feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: getRadius(map.getZoom()),
+                        fillColor: "#e67e22",
+                        color: "#ffffff",
+                        weight: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.on('click', function() {
+                        showPopup(feature, layer);
+                    });
+                }
+            }).addTo(map);
+ 
+            // Mise à jour du rayon au zoom
+            map.on('zoomend', function() {
+                var newRadius = getRadius(map.getZoom());
+                kiosquesLayer.eachLayer(function(layer) {
+                    if (layer.setRadius) layer.setRadius(newRadius);
+                });
+            });
+        }
+ 
+        // Fonction de recherche
+        async function rs() {
+            var q = document.getElementById('p-in').value;
+            if (!q) return;
+            var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
+            try {
+                var res = await fetch(url);
+                var d = await res.json();
+                if (d.length > 0) {
+                    map.setView([d[0].lat, d[0].lon], 17);
+                } else {
+                    alert("Lieu non trouvé.");
+                }
+            } catch(e) { console.error(e); }
+        }
+ 
+        // Popup dynamique avec météo
+        async function showPopup(feature, layer) {
+            var props = feature.properties;
+            var fieldConfig = {
+                'descriptio': { label: 'Description', icon: 'https://img.icons8.com/color/48/edit-property.png', full: true },
+                'Ville':      { label: 'Ville',       icon: 'https://img.icons8.com/color/48/city.png',          full: false },
+                'Etat':       { label: 'État',        icon: 'https://img.icons8.com/color/48/wrench.png',        full: false }
+            };
+ 
+            var html = '<div class="popup-header"><b>' + (props.Name || "Kiosque") + '</b></div><div class="popup-grid">';
+ 
+            for (var key in fieldConfig) {
+                var conf = fieldConfig[key];
+                var val  = props[key] || "N/A";
+                html += '<div class="info-card ' + (conf.full ? 'full' : '') + '">'
+                      + '<span class="card-label">' + conf.label + '</span>'
+                      + '<span class="card-value"><img src="' + conf.icon + '" class="card-icon"> ' + val + '</span>'
+                      + '</div>';
+            }
+ 
+            var uniqueId = "id" + Math.random().toString(36).substr(2, 9);
+            html += '<div id="' + uniqueId + '" class="info-card full" style="text-align:center;">Chargement météo...</div></div>';
+ 
+            layer.bindPopup(html, { maxWidth: 300 }).openPopup();
+ 
+            // Météo via OpenWeatherMap
+            var lat = feature.geometry.coordinates[1];
+            var lon = feature.geometry.coordinates[0];
+            try {
+                var resW = await fetch('https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=a778e47f93ab9c079350387fafebb65e&units=metric&lang=fr');
+                var w = await resW.json();
+                var el = document.getElementById(uniqueId);
+                if (el) el.innerHTML = '<b>' + Math.round(w.main.temp) + '°C</b> - ' + w.weather[0].description;
+            } catch(e) {
+                var el = document.getElementById(uniqueId);
+                if (el) el.innerHTML = "Météo indisponible";
+            }
+        }
+ 
     </script>
 </body>
 </html>
