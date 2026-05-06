@@ -346,89 +346,95 @@
     <script src="donnees.js"></script>
 
     <script>
-		function getRadius(zoom) {
-            if (zoom <= 11) return 3;
-            if (zoom <= 13) return 6;
-            if (zoom <= 15) return 9;
-            return 13;
-        }
-        /* ---- INTRO ---- */
-        function closeIntro() {
-            document.getElementById('intro-overlay').style.opacity = '0';
-            setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; }, 500);
-        }
+    /* 1. FONCTIONS D'INTERFACE (Intro / Contact) */
+    function closeIntro() {
+        document.getElementById('intro-overlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; }, 500);
+    }
+    function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+    function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
 
-        /* ---- CONTACT ---- */
-        function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
-        function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
-        document.getElementById('contact-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeContact();
-        });
-
-        /* ---- FONDS DE CARTE ---- */
-        var reunionBounds = L.latLngBounds(L.latLng(-21.45, 55.15), L.latLng(-20.80, 55.95));
-
-        // OSM standard — fonctionne en ouvrant le fichier localement (file://)
-        // Si hébergé sur un serveur, ajouter dans les headers : User-Agent et Referer
-var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-});
-
-var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-    subdomains: ['mt0','mt1','mt2','mt3'],
-    maxNativeZoom: 20, 
-    maxZoom: 21,
-    attribution: '&copy; Google'
-});
-
-/* 2. La fonction de taille des points */
-function getRadius(zoom) {
-    if (zoom <= 11) return 3;
-    if (zoom <= 13) return 6;
-    if (zoom <= 15) return 9;
-    return 13;
-}
-
-/* 3. Initialisation de la CARTE */
-// On utilise "osm" qui a été défini juste au-dessus
-var map = L.map('map', { 
-    center: [-21.115, 55.536], 
-    zoom: 11, 
-    minZoom: 10,
-    maxBounds: reunionBounds,
-    zoomControl: false,
-    layers: [osm], // Maintenant "osm" existe, donc ça marche !
-    tap: true,
-    tapTolerance: 20
-});
-
-/* 4. Ajout du contrôle de zoom en haut à gauche */
-L.control.zoom({ position: 'topleft' }).addTo(map);
-
-/* 5. Chargement des données (Kiosques) */
-var kiosquesLayer = L.geoJSON(mesKiosques, {
-    pointToLayer: function(f, latlng) {
-        return L.circleMarker(latlng, {
-            radius: getRadius(map.getZoom()),
-            fillColor: "#e67e22",
-            color: "#ffffff",
-            weight: 1,
-            fillOpacity: 0.8
-        });
-    },
-    onEachFeature: onEachFeature
-}).addTo(map);
-
-/* 6. Mise à jour automatique au Zoom */
-map.on('zoomend', function() {
-    var currentZoom = map.getZoom();
-    var newRadius = getRadius(currentZoom);
-    kiosquesLayer.eachLayer(function(layer) {
-        if (layer.setRadius) {
-            layer.setRadius(newRadius);
-        }
+    /* 2. DÉFINITION DES VARIABLES DE BASE (La préparation) */
+    var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
+    
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
     });
-});
+
+    // Fonction pour la taille dynamique des points
+    function getRadius(zoom) {
+        if (zoom <= 11) return 3;
+        if (zoom <= 13) return 6;
+        if (zoom <= 15) return 9;
+        return 13;
+    }
+
+    /* 3. INITIALISATION DE LA CARTE */
+    var map = L.map('map', { 
+        center: [-21.115, 55.536], 
+        zoom: 11, 
+        minZoom: 10,
+        maxBounds: reunionBounds,
+        zoomControl: false,
+        layers: [osm] // osm est bien défini au-dessus, donc la carte s'affiche !
+    });
+
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    /* 4. LE PANNEAU DE RECHERCHE (Votre code corrigé) */
+    var searchControl = L.control({position: 'topleft'});
+    searchControl.onAdd = function() {
+        var div = L.DomUtil.create('div', 'search-panel');
+        // On garde votre style spécifique
+        div.style.cssText = 'position:fixed; top:108px; left:50%; transform:translateX(-50%); z-index:1000; background:white; padding:5px; border-radius:5px;';
+        div.innerHTML = '<input type="text" id="p-in" placeholder="Chercher un lieu..." onkeypress="if(event.keyCode==13) rs()">'
+                      + '<button class="btn-search" onclick="rs()">LOCALISER</button>';
+        L.DomEvent.disableClickPropagation(div);
+        return div;
+    };
+    searchControl.addTo(map);
+
+    // Fonction de recherche Nominatim
+    async function rs() {
+        var q = document.getElementById('p-in').value;
+        if (!q) return;
+        var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
+        try {
+            var res = await fetch(url);
+            var d = await res.json();
+            if (d.length > 0) {
+                map.setView([d[0].lat, d[0].lon], 17);
+            } else {
+                alert("Lieu non trouvé.");
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    /* 5. AFFICHAGE DES POINTS (KIOSQUES) */
+    if (typeof mesKiosques !== 'undefined') {
+        var kiosquesLayer = L.geoJSON(mesKiosques, {
+            pointToLayer: function(f, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: getRadius(map.getZoom()),
+                    fillColor: "#e67e22",
+                    color: "#ffffff",
+                    weight: 1,
+                    fillOpacity: 0.8
+                });
+            }
+        }).addTo(map);
+
+        /* 6. MISE À JOUR DYNAMIQUE AU ZOOM */
+        map.on('zoomend', function() {
+            var currentZoom = map.getZoom();
+            var newRadius = getRadius(currentZoom);
+            kiosquesLayer.eachLayer(function(layer) {
+                if (layer.setRadius) layer.setRadius(newRadius);
+            });
+        });
+    }
+</script>
+
             center: [-21.115, 55.536], 
             zoom: 11, 
             minZoom: 10,
