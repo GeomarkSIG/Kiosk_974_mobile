@@ -115,24 +115,101 @@
         .btn-search { width: 100%; background: #27ae60; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 11px; }
  
         /* POPUP */
-        .leaflet-popup-content-wrapper { padding: 0; border-radius: 15px; overflow: hidden; background: #fdfdfd; animation: slowSlideUp 0.8s ease-out; }
-        @keyframes slowSlideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-        .leaflet-popup-content { margin: 0 !important; width: 340px !important; }
-        .popup-header { background: #e67e22; color: white; padding: 15px 45px 15px 15px; font-weight: bold; font-size: 15px; position: relative; }
-        
-        .leaflet-container .leaflet-popup-close-button {
-            right: 8px !important; top: 12px !important; background: #ff4757 !important; color: white !important;
-            border-radius: 50% !important; width: 22px !important; height: 22px !important;
-            line-height: 22px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;
-        }
+        .leaflet-popup-content-wrapper {
+    padding: 0; border-radius: 16px; overflow: hidden;
+    background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    animation: popSlide 0.4s cubic-bezier(.22,1,.36,1);
+}
+@keyframes popSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.leaflet-popup-content { margin: 0 !important; width: 360px !important; }
  
-        .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; background: #fff; }
-        .info-card { background: #f8f9fa; padding: 8px; border-radius: 6px; border-left: 3px solid #e67e22; }
-        .info-card.full { grid-column: span 2; }
-        .card-label { font-size: 9px; color: #95a5a6; text-transform: uppercase; font-weight: bold; display: block; }
-        .card-value { font-size: 12px; color: #2c3e50; font-weight: 600; display: flex; align-items: center; margin-top: 2px; }
-        .card-icon { width: 16px; margin-right: 6px; }
-        .status-badge { background: #27ae60; color: white; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+.pp-head {
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    color: #fff;
+    padding: 14px 48px 14px 16px;
+    position: relative;
+}
+.pp-head .pp-title { font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+.pp-head .pp-subtitle { font-size: 11px; opacity: .85; margin-top: 2px; }
+.pp-head .pp-badge {
+    position: absolute; top: 14px; right: 36px;
+    background: rgba(255,255,255,.25);
+    border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700;
+}
+ 
+.pp-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; padding: 12px; background: #f8f9fa;
+}
+.pp-card {
+    background: #fff; border-radius: 10px;
+    border: 1.5px solid #eee;
+    padding: 8px 10px;
+    display: flex; align-items: flex-start; gap: 8px;
+    transition: border-color .2s;
+}
+.pp-card:hover { border-color: #e67e22; }
+.pp-card.full { grid-column: span 2; }
+.pp-card .pp-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+}
+.pp-card .pp-label { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: 700; letter-spacing: .5px; }
+.pp-card .pp-val   { font-size: 13px; color: #2c3e50; font-weight: 600; margin-top: 1px; }
+ 
+.pp-meteo {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2980b9 100%);
+    border-radius: 12px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    border: none;
+}
+.pp-meteo .pp-meteo-icon { font-size: 44px; line-height: 1; }
+.pp-meteo .pp-meteo-main { flex: 1; }
+.pp-meteo .pp-meteo-temp {
+    font-size: 28px; font-weight: 800; color: #fff; line-height: 1;
+}
+.pp-meteo .pp-meteo-desc { font-size: 12px; color: rgba(255,255,255,.8); margin-top: 2px; text-transform: capitalize; }
+.pp-meteo .pp-meteo-right { text-align: right; }
+.pp-meteo .pp-meteo-stat { font-size: 11px; color: rgba(255,255,255,.85); margin-bottom: 3px; }
+.pp-meteo .pp-meteo-stat span { font-weight: 700; font-size: 13px; color: #fff; }
+ 
+.pp-meteo-loading {
+    grid-column: span 2;
+    background: #1e3a5f; border-radius: 12px;
+    padding: 14px; text-align: center; color: #fff; font-size: 12px;
+    animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+ 
+.pp-footer {
+    padding: 8px 12px;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    display: flex; gap: 6px;
+}
+.pp-btn {
+    flex: 1; padding: 7px; border-radius: 8px; border: none;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    text-decoration: none;
+}
+.pp-btn-nav  { background: #e67e22; color: #fff; }
+.pp-btn-nav:hover { background: #d35400; }
+.pp-btn-info { background: #eaf3de; color: #27500a; }
+.pp-btn-info:hover { background: #c0dd97; }
+ 
+.leaflet-container .leaflet-popup-close-button {
+    right: 10px !important; top: 10px !important;
+    background: rgba(255,255,255,.25) !important;
+    color: #fff !important; border-radius: 50% !important;
+    width: 22px !important; height: 22px !important;
+    line-height: 22px !important; font-size: 14px !important;
+}
  
         /* FLÈCHE NORD */
         .north-arrow { padding: 8px; background: rgba(255,255,255,0.9); border-radius: 4px; border: 1px solid #ccc; text-align: center; }
@@ -348,16 +425,113 @@
     <script src="donnees.js"></script>
  
     <script>
+        function getWeatherVisual(code, isDay) {
+    if (code >= 200 && code < 300) return { icon: '⛈️',  bg: 'linear-gradient(135deg,#2c3e50 0%,#4a5568 100%)', label: 'Orageux' };
+    if (code >= 300 && code < 400) return { icon: '🌦️',  bg: 'linear-gradient(135deg,#3d5a80 0%,#5b8db8 100%)', label: 'Bruine' };
+    if (code >= 500 && code < 600) {
+        if (code === 500) return { icon: '🌧️', bg: 'linear-gradient(135deg,#2d4a6e 0%,#3d7abf 100%)', label: 'Pluie légère' };
+        if (code >= 502) return { icon: '⛈️', bg: 'linear-gradient(135deg,#1a2f4e 0%,#2d5a8e 100%)', label: 'Forte pluie' };
+        return { icon: '🌧️', bg: 'linear-gradient(135deg,#2d4a6e 0%,#3d7abf 100%)', label: 'Pluie' };
+    }
+    if (code >= 600 && code < 700) return { icon: '❄️',  bg: 'linear-gradient(135deg,#5b8fb9 0%,#9fc8e8 100%)', label: 'Neige' };
+    if (code >= 700 && code < 800) return { icon: '🌫️',  bg: 'linear-gradient(135deg,#6b7280 0%,#9ca3af 100%)', label: 'Brume' };
+    if (code === 800) return isDay
+        ? { icon: '☀️',  bg: 'linear-gradient(135deg,#e67e22 0%,#f39c12 100%)', label: 'Ciel dégagé' }
+        : { icon: '🌙',  bg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)', label: 'Nuit claire' };
+    if (code === 801) return { icon: '🌤️',  bg: 'linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%)', label: 'Peu nuageux' };
+    if (code === 802) return { icon: '⛅',  bg: 'linear-gradient(135deg,#2563eb 0%,#60a5fa 100%)', label: 'Partiellement nuageux' };
+    return { icon: '☁️', bg: 'linear-gradient(135deg,#4b5563 0%,#6b7280 100%)', label: 'Nuageux' };
+}
+ 
+function getHumidityIcon(h) {
+    if (h < 40) return '💧';
+    if (h < 70) return '💦';
+    return '🌊';
+}
+ 
+function getWindIcon(spd) {
+    if (spd < 5)  return '🍃';
+    if (spd < 15) return '💨';
+    return '🌀';
+}
+ 
+function getUVIcon(uv) {
+    if (!uv && uv !== 0) return '';
+    if (uv < 3)  return '🟢';
+    if (uv < 6)  return '🟡';
+    if (uv < 8)  return '🟠';
+    return '🔴';
+}
  
         var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
  
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        });
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+});
  
+        var googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    subdomains: ['mt0','mt1','mt2','mt3'],
+    attribution: '&copy; Google Satellite',
+    maxZoom: 20
+});
+ 
+        var googleMap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    subdomains: ['mt0','mt1','mt2','mt3'],
+    attribution: '&copy; Google Maps',
+    maxZoom: 20
+});
+ 
+        var baseLayers = {
+    '<span style="font-weight:600">🗺️ OpenStreetMap</span>': osm,
+    '<span style="font-weight:600">🛰️ Google Satellite</span>': googleSat,
+    '<span style="font-weight:600">📍 Google Maps</span>': googleMap
+};
+
         var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; CartoDB'
         });
+
+         L.control.layers(baseLayers, null, { position: 'topright', collapsed: false }).addTo(map);
+         osm.addTo(map);
+
+        ar OWM_KEY = 'a778e47f93ab9c079350387fafebb65e'; /* votre clé */
+ 
+async function showPopup(feature, layer) {
+    var props = feature.properties;
+    var lat   = feature.geometry.coordinates[1];
+    var lon   = feature.geometry.coordinates[0];
+ 
+    /* --- En-tête --- */
+    var etatClass = '';
+    var etatVal   = (props['Etat'] || '').toLowerCase();
+    if (etatVal.includes('bon') || etatVal.includes('ouvert')) etatClass = 'color:#27ae60';
+    else if (etatVal.includes('ferm') || etatVal.includes('dégrad')) etatClass = 'color:#e74c3c';
+ 
+    var headHtml =
+        '<div class="pp-head">' +
+          '<div class="pp-title">' + (props.Name || 'Kiosque') + '</div>' +
+          (props.Ville ? '<div class="pp-subtitle">📍 ' + props.Ville + '</div>' : '') +
+          (props.Etat  ? '<div class="pp-badge" style="' + etatClass + '">' + props.Etat + '</div>' : '') +
+        '</div>';
+ 
+    /* --- Grille des attributs --- */
+    var gridHtml = '<div class="pp-grid">';
+ 
+    for (var key in fieldConfig) {
+        if (key === 'Name') continue; /* déjà dans l'en-tête */
+        var val = props[key];
+        if (!val || val === '' || val === 'N/A' || val === 'null') continue;
+        var cfg = fieldConfig[key];
+        gridHtml +=
+            '<div class="pp-card' + (cfg.full ? ' full' : '') + '">' +
+              '<div class="pp-icon" style="background:' + cfg.bg + ';color:' + cfg.color + '">' + cfg.icon + '</div>' +
+              '<div>' +
+                '<div class="pp-label">' + cfg.label + '</div>' +
+                '<div class="pp-val">' + val + '</div>' +
+              '</div>' +
+            '</div>';
+    }
  
         // Initialisation de la carte
         var map = L.map('map', {
