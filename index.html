@@ -271,7 +271,19 @@
     <script src="donnees.js"></script>
 
     <script>
+// 1. Initialisation de la CARTE d'abord
+        var reunionBounds = L.latLngBounds(L.latLng(-21.45, 55.15), L.latLng(-20.80, 55.95));
+        
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        });
 
+        var map = L.map('map', {
+            center: [-21.115, 55.536],
+            zoom: 10,
+            layers: [osm],
+            maxBounds: reunionBounds
+        });
         /* ---- INTRO ---- */
    function closeIntro() {
             document.getElementById('intro-overlay').style.opacity = '0';
