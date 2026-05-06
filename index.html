@@ -369,18 +369,6 @@
         return 13;
     }
 
-    /* 3. INITIALISATION DE LA CARTE */
-    var map = L.map('map', { 
-        center: [-21.115, 55.536], 
-        zoom: 11, 
-        minZoom: 10,
-        maxBounds: reunionBounds,
-        zoomControl: false,
-        layers: [osm] // osm est bien défini au-dessus, donc la carte s'affiche !
-    });
-
-    L.control.zoom({ position: 'topleft' }).addTo(map);
-
     /* 4. LE PANNEAU DE RECHERCHE (Votre code corrigé) */
     var searchControl = L.control({position: 'topleft'});
     searchControl.onAdd = function() {
