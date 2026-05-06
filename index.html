@@ -425,6 +425,12 @@
     <script src="donnees.js"></script>
  
     <script>
+        function closeIntro() {
+        document.getElementById('intro-overlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; }, 500);
+    }
+    function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+    function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
         function getWeatherVisual(code, isDay) {
     if (code >= 200 && code < 300) return { icon: '⛈️',  bg: 'linear-gradient(135deg,#2c3e50 0%,#4a5568 100%)', label: 'Orageux' };
     if (code >= 300 && code < 400) return { icon: '🌦️',  bg: 'linear-gradient(135deg,#3d5a80 0%,#5b8db8 100%)', label: 'Bruine' };
@@ -495,8 +501,14 @@ function getUVIcon(uv) {
          L.control.layers(baseLayers, null, { position: 'topright', collapsed: false }).addTo(map);
          osm.addTo(map);
 
-        ar OWM_KEY = 'a778e47f93ab9c079350387fafebb65e'; /* votre clé */
- 
+        var OWM_KEY = 'a778e47f93ab9c079350387fafebb65e'; /* votre clé */
+  // Fonction pour la taille dynamique des points
+    function getRadius(zoom) {
+        if (zoom <= 11) return 3;
+        if (zoom <= 13) return 6;
+        if (zoom <= 15) return 9;
+        return 13;
+        
 async function showPopup(feature, layer) {
     var props = feature.properties;
     var lat   = feature.geometry.coordinates[1];
@@ -546,16 +558,7 @@ async function showPopup(feature, layer) {
         });
  
         L.control.zoom({ position: 'topleft' }).addTo(map);
-        L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
- 
-        // Fonctions d'interface
-        function closeIntro() {
-            var intro = document.getElementById('intro-overlay');
-            intro.style.opacity = '0';
-            setTimeout(function() { intro.style.display = 'none'; }, 500);
-        }
-        function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
-        function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
+        L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map) 
  
         // Gestion de la taille des points selon le zoom
         function getRadius(zoom) {
@@ -608,7 +611,15 @@ async function showPopup(feature, layer) {
                 }
             } catch(e) { console.error(e); }
         }
- 
+ /* 6. MISE À JOUR DYNAMIQUE AU ZOOM */
+        map.on('zoomend', function() {
+            var currentZoom = map.getZoom();
+            var newRadius = getRadius(currentZoom);
+            kiosquesLayer.eachLayer(function(layer) {
+                if (layer.setRadius) layer.setRadius(newRadius);
+            });
+        });
+    }
         // Popup dynamique avec météo
         async function showPopup(feature, layer) {
             var props = feature.properties;
