@@ -346,7 +346,12 @@
     <script src="donnees.js"></script>
 
     <script>
-
+		function getRadius(zoom) {
+            if (zoom <= 11) return 3;
+            if (zoom <= 13) return 6;
+            if (zoom <= 15) return 9;
+            return 13;
+        }
         /* ---- INTRO ---- */
         function closeIntro() {
             document.getElementById('intro-overlay').style.opacity = '0';
