@@ -273,31 +273,19 @@
     <script>
 
         /* ---- INTRO ---- */
-        function closeIntro() {
-    document.getElementById('intro-overlay').style.opacity = '0';
-    setTimeout(() => { 
-        document.getElementById('intro-overlay').style.display = 'none'; 
-        
-        // DÉCLENCHE LE ZOOM SUR TA POSITION
-        map.locate({setView: true, maxZoom: 16});
-    }, 500);
-}
+   function closeIntro() {
+            document.getElementById('intro-overlay').style.opacity = '0';
+            setTimeout(() => { 
+                document.getElementById('intro-overlay').style.display = 'none'; 
+                // Zoom sur la position en direct[cite: 1]
+                map.locate({setView: true, maxZoom: 16});
+            }, 500);
+        }
 
-// AJOUTE UN MARQUEUR BLEU SUR TA POSITION
-map.on('locationfound', function(e) {
-    L.circleMarker(e.latlng, {
-        radius: 8,
-        fillColor: "#3498db",
-        color: "#fff",
-        weight: 2,
-        fillOpacity: 1
-    }).addTo(map).bindPopup("Vous êtes ici !").openPopup();
-});
-
-// GÈRE L'ERREUR SI LA GÉOLOCALISATION EST REFUSÉE
-map.on('locationerror', function(e) {
-    console.log("Localisation refusée.");
-});
+        map.on('locationfound', function(e) {
+            L.circleMarker(e.latlng, { radius: 8, fillColor: "#3498db", color: "#fff", fillOpacity: 1 })
+             .addTo(map).bindPopup("Vous êtes ici !").openPopup();
+        });
 
         /* ---- CONTACT ---- */
         function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
