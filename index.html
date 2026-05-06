@@ -347,284 +347,128 @@
 
     <script>
 
-		// 1. Initialisation de la carte centrée sur La Réunion
-        var map = L.map('map', {
-            center: [-21.115, 55.536],
-            zoom: 10,
-            zoomControl: true
-			center: [-21.115, 55.536], 
-            zoom: 11, 
-            minZoom: 10,
-            maxBounds: reunionBounds,
-            zoomControl: false,
-            layers: [osm],
-	        tap: true,         // <-- AJOUTER CECI
-            tapTolerance: 20   // <-- AJOUTER CECI (marge d'erreur pour le doigt)
-        });
-        });
+		var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
 
-        var osm = L.tileLayer('https://{s}.tile.openstreet.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo();
+var osm = L.tileLayer('https://{s}.tile.openstreet.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+});
 
-        function closeIntro() { document.getElementById('intro-overlay').style.display = 'none'; }
-        function openContact() { document.getElementById('contact-modal').classList.add('open'); }
-        function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
-    /* 1. FONCTIONS D'INTERFACE (Intro / Contact) */
-    function closeIntro() {
-        document.getElementById('intro-overlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; }, 500);
-    }
-    function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
-    function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
+var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; CartoDB'
+});
 
-    /* 2. DÉFINITION DES VARIABLES DE BASE (La préparation) */
-    var reunionBounds = [[-21.4, 55.1], [-20.8, 55.9]];
-    
-    var osm = L.tileLayer('https://{s}.tile.openstreet.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    });
+// 2. Initialisation de la CARTE (Une seule fois !)
+var map = L.map('map', {
+    center: [-21.115, 55.536],
+    zoom: 11,
+    minZoom: 10,
+    maxBounds: reunionBounds,
+    zoomControl: false,
+    layers: [osm],
+    tap: true,
+    tapTolerance: 20
+});
 
-    // Fonction pour la taille dynamique des points
-    function getRadius(zoom) {
-        if (zoom <= 11) return 3;
-        if (zoom <= 13) return 6;
-        if (zoom <= 15) return 9;
-        return 13;
-    }
+// Ajout des contrôles
+L.control.zoom({ position: 'topleft' }).addTo(map);
+L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo(map);
 
-    /* 4. LE PANNEAU DE RECHERCHE (Votre code corrigé) */
-    var searchControl = L.control({position: 'topleft'});
-    searchControl.onAdd = function() {
-        var div = L.DomUtil.create('div', 'search-panel');
-        // On garde votre style spécifique
-        div.style.cssText = 'position:fixed; top:108px; left:50%; transform:translateX(-50%); z-index:1000; background:white; padding:5px; border-radius:5px;';
-        div.innerHTML = '<input type="text" id="p-in" placeholder="Chercher un lieu..." onkeypress="if(event.keyCode==13) rs()">'
-                      + '<button class="btn-search" onclick="rs()">LOCALISER</button>';
-        L.DomEvent.disableClickPropagation(div);
-        return div;
-    };
-    searchControl.addTo();
+// 3. Fonctions d'interface
+function closeIntro() {
+    const intro = document.getElementById('intro-overlay');
+    intro.style.opacity = '0';
+    setTimeout(() => { intro.style.display = 'none'; }, 500);
+}
+function openContact()  { document.getElementById('contact-modal').classList.add('open'); }
+function closeContact() { document.getElementById('contact-modal').classList.remove('open'); }
 
-    // Fonction de recherche Nominatim
-    async function rs() {
-        var q = document.getElementById('p-in').value;
-        if (!q) return;
-        var url = 'https://nominatim.openstreet.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
-        try {
-            var res = await fetch(url);
-            var d = await res.json();
-            if (d.length > 0) {
-                .setView([d[0].lat, d[0].lon], 17);
-            } else {
-                alert("Lieu non trouvé.");
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    /* 5. AFFICHAGE DES POINTS (KIOSQUES) */
-    if (typeof mesKiosques !== 'undefined') {
-        var kiosquesLayer = L.geoJSON(mesKiosques, {
-            pointToLayer: function(f, latlng) {
-                return L.circleMarker(latlng, {
-                    radius: getRadius(.getZoom()),
-                    fillColor: "#e67e22",
-                    color: "#ffffff",
-                    weight: 1,
-                    fillOpacity: 0.8
-                });
-            }
-        }).addTo();
-
-        /* 6. MISE À JOUR DYNAMIQUE AU ZOOM */
-        .on('zoomend', function() {
-            var currentZoom = .getZoom();
-            var newRadius = getRadius(currentZoom);
-            kiosquesLayer.eachLayer(function(layer) {
-                if (layer.setRadius) layer.setRadius(newRadius);
-            });
-        });
-    }
-</script>
-	<script>
-            center: [-21.115, 55.536], 
-            zoom: 11, 
-            minZoom: 10,
-            maxBounds: reunionBounds,
-            zoomControl: false,
-            layers: [osm],
-	    tap: true,         // <-- AJOUTER CECI
-            tapTolerance: 20   // <-- AJOUTER CECI (marge d'erreur pour le doigt)
-        });
-
-        L.control.zoom({ position: 'topleft' }).addTo();
-
-        L.control.layers(
-            { "🌍 Plan (OSM)": osm, "🏙️ Plan (Carto)": carto, "🛰️ Satellite": googleHybrid },
-            null,
-            { collapsed: true, position: 'topright' }
-        ).addTo();
-
-        L.control.scale({ imperial: false, metric: true, position: 'bottomright' }).addTo();
-
-        /* ---- FLÈCHE NORD ---- */
-        var north = L.control({position: 'bottomright'});
-        north.onAdd = function() {
-            var div = L.DomUtil.create('div', 'north-arrow');
-            div.innerHTML = '<span style="font-weight:bold;font-size:12px;">N</span>'
-                          + '<img src="https://img.icons8.com/ios-filled/50/000000/long-arrow-up.png">';
-            return div;
-        };
-        north.addTo();
-
-        /* ---- DRAPEAU RÉUNION (fichier local SVG) ---- */
-        var flagControl = L.control({position: 'bottomright'});
-        flagControl.onAdd = function() {
-            var div = L.DomUtil.create('div', 'reunion-flag-control');
-            div.title = 'Île de La Réunion';
-            div.innerHTML = '<img src="Drapeau_974.jpg" alt="Drapeau Réunion">';
-            return div;
-        };
-        flagControl.addTo();
-
-        /* ---- CHAMPS POPUP ---- */
-        var fieldConfig = {
-            'descriptio': { label: 'Description',  icon: 'https://img.icons8.com/color/48/edit-property.png',         full: true  },
-            'bbq':        { label: 'Barbecue',      icon: 'https://img.icons8.com/color/48/fire-element.png',          full: false },
-            'access':     { label: 'Accès',         icon: 'https://img.icons8.com/color/48/parking.png',               full: false },
-            'table':      { label: 'Table',         icon: 'https://img.icons8.com/color/48/picnic-table.png',          full: false },
-            'toilettes':  { label: 'Toilettes',     icon: 'https://img.icons8.com/color/48/toilet.png',                full: false },
-            'Ville':      { label: 'Ville',         icon: 'https://img.icons8.com/color/48/city.png',                  full: false },
-            'Lieu':       { label: 'Lieu',          icon: 'https://img.icons8.com/color/48/landscape.png',             full: false },
-            'Etat':       { label: 'État',          icon: 'https://img.icons8.com/color/48/wrench.png',                full: false },
-            'Owner':      { label: 'Propriétaire',  icon: 'https://img.icons8.com/color/48/user-male-circle--v1.png', full: true  }
-        };
-
-        /* ---- LAYER KIOSQUES ---- */
-        if (typeof mesKiosques !== 'undefined') {
-            // Détecter si on est sur mobile pour la taille du point
-            var mobileSize = (window.innerWidth < 600) ? 10 : 6;
-
-           function getRadius(zoom) {
-               return zoom <= 11 ? 4 :
-                      zoom <= 13 ? 6 :
-                      zoom <= 15 ? 9 : 12;
-         }
-
-           var kiosquesLayer = L.geoJSON(mesKiosques, {
-               pointToLayer: function(f, latlng) {
-                   return L.circleMarker(latlng, {
-                       radius: getRadius(.getZoom()), // Taille initiale
-                       fillColor: "#e67e22",
-                       color: "#d35400",
-                       weight: 1,
-                       fillOpacity: 0.8
-        });
-    },
-    onEachFeature: function(feature, layer) {
-        layer.on('click', function() {
-            showPopup(feature, layer);
-        });
-    }
-}).addTo();
-
-        async function showPopup(feature, layer) {
-    var props = feature.properties;
-    
-    // 1. Structure de base de la popup (Design Index 2)
-    let html = `<div class="popup-header"><b>${props.Name || "Kiosque"}</b></div><div class="popup-grid">`;
-    
-    for (var key in fieldConfig) {
-        var conf = fieldConfig[key];
-        var val = props[key];
-        var display = (!val || val === "null") ? "N/A" : val;
-        if (key === 'Etat' && val && val !== "null") display = '<span class="status-badge">' + val + '</span>';
-        
-        html += `<div class="info-card ${conf.full ? 'full' : ''}">
-                    <span class="card-label">${conf.label}</span>
-                    <span class="card-value"><img src="${conf.icon}" class="card-icon"> ${display}</span>
-                 </div>`;
-    }
-
-    // Zone d'attente pour les données API (Altitude/Météo)
-    let uniqueId = props.id || Math.random().toString(36).substr(2, 9);
-    html += `<div id="extra-data-${uniqueId}" class="info-card full" style="text-align:center; background:#f9f9f9; min-height:40px; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-spinner fa-spin"></i> &nbsp; Chargement altitude & météo...
-             </div></div>`;
-    
-    layer.bindPopup(html, { 
-        maxWidth: window.innerWidth * 0.85, 
-        offset: L.point(0, -10) 
-    }).openPopup();
-
-    // 2. Appel aux API (Logique Index 3)
-    const lat = feature.geometry.coordinates[1];
-    const lon = feature.geometry.coordinates[0];
-
-    try {
-        const [resAlt, resW] = await Promise.all([
-            fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`),
-            fetch(`https://api.openweather.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a778e47f93ab9c079350387fafebb65e&units=metric&lang=fr`)
-        ]);
-
-        const dataAlt = await resAlt.json();
-        const w = await resW.json();
-        const alt = dataAlt.results[0].elevation;
-
-        // Mise à jour de la popup avec les résultats
-        const updatedContent = `
-            <div style="display: flex; gap: 5px; width: 100%; margin-top:5px;">
-                <div style="flex:1; background:#e8f5e9; padding:8px; border-radius:5px; border-left:4px solid #27ae60; text-align:left;">
-                    <small style="color:gray; font-size:10px; display:block;">ALTITUDE</small>
-                    <b style="color:#2c3e50;"><i class="fa-solid fa-mountain" style="color:#27ae60;"></i> ${Math.round(alt)} m</b>
-                </div>
-                <div style="flex:1; background:#fff7f2; padding:8px; border-radius:5px; border-left:4px solid #3498db; text-align:left;">
-                    <small style="color:gray; font-size:10px; display:block;">MÉTÉO LIVE</small>
-                    <b style="color:#2c3e50;">${Math.round(w.main.temp)}°C</b> <span style="font-size:10px;">| <i class="fa-solid fa-wind"></i> ${Math.round(w.wind.speed * 3.6)} km/h</span>
-                </div>
-            </div>`;
-
-        const container = document.getElementById(`extra-data-${uniqueId}`);
-        if (container) container.innerHTML = updatedContent;
-
-    } catch (e) {
-        const container = document.getElementById(`extra-data-${uniqueId}`);
-        if (container) container.innerHTML = "<span style='color:red; font-size:11px;'>Données météo indisponibles</span>";
-    }
+// 4. Gestion de la taille des points
+function getRadius(zoom) {
+    if (zoom <= 11) return 4;
+    if (zoom <= 13) return 6;
+    if (zoom <= 15) return 9;
+    return 12;
 }
 
-        /* ---- RECHERCHE ---- */
-        var searchControl = L.control({position: 'topleft'});
-        searchControl.onAdd = function() {
-            var div = L.DomUtil.create('div', 'search-panel');
-            div.innerHTML = '<input type="text" id="p-in" placeholder="Chercher un POI / Lieu..." onkeypress="if(event.keyCode==13) rs()">'
-                          + '<button class="btn-search" onclick="rs()">LOCALISER</button>';
-            L.DomEvent.disableClickPropagation(div);
-            return div;
-        };
-        searchControl.addTo();
-
-        async function rs() {
-            var q = document.getElementById('p-in').value;
-            if (!q) return;
-            var url = 'https://nominatim.openstreet.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
-            try {
-                var res = await fetch(url);
-                var d = await res.json();
-                if (d.length > 0) {
-                    .setView([d[0].lat, d[0].lon], 17);
-                } else {
-                    alert("Lieu non trouvé.");
-                }
-            } catch (e) { console.error(e); }
+// 5. Affichage des Kiosques
+if (typeof mesKiosques !== 'undefined') {
+    var kiosquesLayer = L.geoJSON(mesKiosques, {
+        pointToLayer: function(feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: getRadius(map.getZoom()),
+                fillColor: "#e67e22",
+                color: "#ffffff",
+                weight: 1,
+                fillOpacity: 0.8
+            });
+        },
+        onEachFeature: function(feature, layer) {
+            layer.on('click', function() {
+                showPopup(feature, layer);
+            });
         }
-        .on('zoomend', function() {
-            var currentZoom = .getZoom();
-            var newRadius = getRadius(currentZoom);
+    }).addTo(map);
+
+    // Mise à jour au zoom
+    map.on('zoomend', function() {
+        var newRadius = getRadius(map.getZoom());
+        kiosquesLayer.eachLayer(function(layer) {
+            if (layer.setRadius) layer.setRadius(newRadius);
+        });
+    });
+}
+
+// 6. Fonction Recherche corrigée
+async function rs() {
+    var q = document.getElementById('p-in').value;
+    if (!q) return;
+    var url = 'https://nominatim.openstreet.org/search?format=json&q=' + encodeURIComponent(q + ' La Réunion') + '&limit=1';
+    try {
+        var res = await fetch(url);
+        var d = await res.json();
+        if (d.length > 0) {
+            map.setView([d[0].lat, d[0].lon], 17);
+        } else {
+            alert("Lieu non trouvé.");
+        }
+    } catch (e) { console.error(e); }
+}
+
+// 7. Popup Dynamique
+async function showPopup(feature, layer) {
+    var props = feature.properties;
+    var fieldConfig = {
+        'descriptio': { label: 'Description', icon: 'https://img.icons8.com/color/48/edit-property.png', full: true },
+        'Ville': { label: 'Ville', icon: 'https://img.icons8.com/color/48/city.png', full: false },
+        'Etat': { label: 'État', icon: 'https://img.icons8.com/color/48/wrench.png', full: false }
+    };
+
+    let html = `<div class="popup-header"><b>${props.Name || "Kiosque"}</b></div><div class="popup-grid">`;
+    for (var key in fieldConfig) {
+        let conf = fieldConfig[key];
+        let val = props[key] || "N/A";
+        html += `<div class="info-card ${conf.full ? 'full' : ''}">
+                    <span class="card-label">${conf.label}</span>
+                    <span class="card-value"><img src="${conf.icon}" class="card-icon"> ${val}</span>
+                 </div>`;
+    }
     
-            kiosquesLayer.eachLayer(function(layer) {
-                if (layer.setRadius) {
-                    layer.setRadius(newRadius);
+    let uniqueId = "id" + Math.random().toString(36).substr(2, 9);
+    html += `<div id="${uniqueId}" class="info-card full" style="text-align:center;">Chargement météo...</div></div>`;
+
+    layer.bindPopup(html, { maxWidth: 300 }).openPopup();
+
+    // API Call pour Météo/Altitude
+    const lat = feature.geometry.coordinates[1];
+    const lon = feature.geometry.coordinates[0];
+    try {
+        const resW = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a778e47f93ab9c079350387fafebb65e&units=metric&lang=fr`);
+        const w = await resW.json();
+        document.getElementById(uniqueId).innerHTML = `<b>${Math.round(w.main.temp)}°C</b> - ${w.weather[0].description}`;
+    } catch (e) {
+        document.getElementById(uniqueId).innerHTML = "Météo indisponible";
+    }
+}
         }
     });
 });
